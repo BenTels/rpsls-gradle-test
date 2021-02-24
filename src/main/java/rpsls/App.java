@@ -3,9 +3,12 @@
  */
 package rpsls;
 
+import org.apache.commons.lang3.StringUtils;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.Objects;
 import java.util.Random;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -28,7 +31,7 @@ public class App {
             new GameEntity("Spock", 4)
     );
 
-    private static Random random = new Random();
+    private static final Random random = new Random();
 
     private static GameEntity selectEntity() {
         int i = random.nextInt(entities.size());
@@ -36,7 +39,7 @@ public class App {
     }
 
     private static GameEntity findEntity(String name) {
-        return entities.parallelStream().filter(e -> e.name().toLowerCase().equals(name.toLowerCase())).findFirst().orElse(null);
+        return entities.parallelStream().filter(e -> e.name().equalsIgnoreCase(name)).findFirst().orElse(null);
     }
 
     private static Outcome compare(GameEntity userSelection, GameEntity ourSelection) {
@@ -58,12 +61,11 @@ public class App {
 
             while (userChoice != null) {
                 GameEntity ourChoice = selectEntity();
-                System.out.printf("Pick an option (%s): ", entities.stream().map(e -> e.name()).collect(Collectors.joining(",")));
+                System.out.printf("Pick an option (%s): ", entities.stream().map(GameEntity::name).collect(Collectors.joining(",")));
                 var userOption = inputReader.readLine();
                 System.out.println();
-                System.out.println("*" + userOption);
                 userChoice = findEntity(userOption);
-                if (userChoice != null) {
+                if (Objects.nonNull(userChoice) && StringUtils.isNotBlank(userChoice.name())) {
                     System.out.print("We chose %s; you chose %s.... ".formatted(ourChoice.name(), userChoice.name()));
                     Outcome outcome = compare(userChoice, ourChoice);
                     System.out.println(
