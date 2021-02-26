@@ -42,13 +42,9 @@ public class App {
         if (userSelection == ourSelection) {
             return Outcome.DRAW;
         }
-        if (userSelection.index() < ourSelection.index()) {
-            int diff = ourSelection.index() - userSelection.index();
-            return diff % 2 == 1 ? Outcome.WIN : Outcome.LOSE;
-        } else {
-            int diff = userSelection.index() - ourSelection.index();
-            return diff % 2 == 0 ? Outcome.WIN : Outcome.LOSE;
-        }
+        boolean ourSelectionIsEarlierInUnevenGameCycle = ourSelection.index() - userSelection.index() < 0;
+        int numberOfStepsOurSelectionIsAheadInCycle = ourSelection.index() - userSelection.index() + (ourSelectionIsEarlierInUnevenGameCycle ? 1 : 0);
+        return numberOfStepsOurSelectionIsAheadInCycle % 2 == 0 ? Outcome.LOSE : Outcome.WIN;
     }
 
     private void playTheGameInteractively() {
