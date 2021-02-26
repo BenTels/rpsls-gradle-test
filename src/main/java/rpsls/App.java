@@ -3,27 +3,25 @@
  */
 package rpsls;
 
-import org.apache.commons.lang3.StringUtils;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.Objects;
-import java.util.Random;
+import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
 public class App {
 
-    private record GameEntity(String name, int index) {
+    record GameEntity(String name, int index) {
     }
 
 
-    private enum Outcome {
+    enum Outcome {
         WIN, LOSE, DRAW
     }
 
-    private static final Set<GameEntity> entities = Set.of(
+    protected static final Set<GameEntity> entities = Set.of(
             new GameEntity("Scissors", 0),
             new GameEntity("Paper", 1),
             new GameEntity("Rock", 2),
@@ -31,18 +29,16 @@ public class App {
             new GameEntity("Spock", 4)
     );
 
-    private static final Random random = new Random();
-
-    private static GameEntity selectEntity() {
-        int i = random.nextInt(entities.size());
+    protected GameEntity selectEntity() {
+        int i = ThreadLocalRandom.current().nextInt(entities.size());
         return entities.parallelStream().filter(e -> e.index() == i).findFirst().get();
     }
 
-    private static GameEntity findEntity(String name) {
-        return entities.parallelStream().filter(e -> e.name().equalsIgnoreCase(name)).findFirst().orElse(null);
+    protected Optional<GameEntity> findEntity(String name) {
+        return entities.parallelStream().filter(e -> e.name().equalsIgnoreCase(name)).findFirst();
     }
 
-    private static Outcome compare(GameEntity userSelection, GameEntity ourSelection) {
+    protected Outcome determineTheOutcome(GameEntity userSelection, GameEntity ourSelection) {
         if (userSelection == ourSelection) {
             return Outcome.DRAW;
         }
@@ -55,29 +51,41 @@ public class App {
         }
     }
 
-    public static void main(String[] args) {
+    private void playTheGameInteractively() {
         try (var inputReader = new BufferedReader(new InputStreamReader(System.in))) {
-            GameEntity userChoice = entities.iterator().next();
+            boolean stillPlaying = true;
 
-            while (userChoice != null) {
+            while (stillPlaying) {
                 GameEntity ourChoice = selectEntity();
                 System.out.printf("Pick an option (%s): ", entities.stream().map(GameEntity::name).collect(Collectors.joining(",")));
                 var userOption = inputReader.readLine();
                 System.out.println();
-                userChoice = findEntity(userOption);
-                if (Objects.nonNull(userChoice) && StringUtils.isNotBlank(userChoice.name())) {
-                    System.out.print("We chose %s; you chose %s.... ".formatted(ourChoice.name(), userChoice.name()));
-                    Outcome outcome = compare(userChoice, ourChoice);
-                    System.out.println(
-                            switch (outcome) {
-                                case DRAW -> "It a DRAW!!";
-                                default -> "You " + outcome.name();
-                            }
-                    );
+                var userChoice = findEntity(userOption);
+                if (userChoice.isPresent()) {
+                    doARound(ourChoice, userChoice);
+                } else {
+                    stillPlaying = false;
                 }
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
+
+    private void doARound(GameEntity ourChoice, Optional<GameEntity> userChoice) {
+        GameEntity userSelection = userChoice.get();
+        System.out.print("We chose %s; you chose %s.... ".formatted(ourChoice.name(), userSelection.name()));
+        Outcome outcome = determineTheOutcome(userSelection, ourChoice);
+        System.out.println(
+                switch (outcome) {
+                    case DRAW -> "It's a DRAW!!";
+                    default -> "You " + outcome.name();
+                }
+        );
+    }
+
+    public static void main(String[] args) {
+        new App().playTheGameInteractively();
+    }
+
 }

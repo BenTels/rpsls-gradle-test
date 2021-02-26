@@ -22,11 +22,13 @@ repositories {
 
 dependencies {
     // This dependency is used by the application.
-    implementation 'com.google.guava:guava:29.0-jre'
+    // implementation 'com.google.guava:guava:29.0-jre'
     implementation 'org.apache.commons:commons-lang3:3.11'
 
     // Use JUnit Jupiter API for testing.
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.6.2'
+    // testImplementation 'org.junit.jupiter:junit-jupiter-api:5.6.2'
+    testImplementation(platform('org.junit:junit-bom:5.7.1'))
+    testImplementation('org.junit.jupiter:junit-jupiter')
 
     // Use JUnit Jupiter Engine for testing.
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.6.2'
@@ -50,4 +52,5 @@ run {
 test {
     // Use junit platform for unit tests
     useJUnitPlatform()
+    jvmArgs(['--enable-preview'])
 }
